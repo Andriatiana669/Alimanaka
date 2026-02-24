@@ -1,0 +1,11 @@
+/* Dans le style global ou dans un fichier CSS séparé */
+body {
+  min-width: 1058px;
+  overflow-x: auto;
+}
+
+/* Ajoutez ceci au template pour une barre de défilement visible */
+.dashboard-layout {
+  min-width: 1058px;
+  width: 100%;
+}

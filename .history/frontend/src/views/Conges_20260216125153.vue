@@ -1,0 +1,1836 @@
+<template>
+  <!-- Header avec solde et actions alignées -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1>Mes Congés</h1>
+      <div v-if="authStore.user" class="solde-badge">
+        <span class="solde-dispo">🏖️ {{ authStore.soldeConge.actuelle }}j disponibles</span>
+        <span class="solde-pris">⛔ {{ authStore.soldeConge.consomme }}j pris</span>
+      </div>
+    </div>
+    
+    <div class="header-actions">
+      <button class="btn-export" @click="exportMine">
+        <i class="bi bi-download"></i> Exporter Seul
+      </button>
+      <button v-if="congesStore.isSuperAdmin" class="btn-export-all" @click="exportAll">
+        <i class="bi bi-download"></i> Exporter Tous
+      </button>
+      <button class="btn-primary" @click="openRequestModal">
+        <i class="bi bi-plus-lg"></i> 
+        {{ congesStore.canManageOthers ? 'Ajouter une demande' : 'Nouvelle demande' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Filtres avancés pour managers/admins -->
+  <div v-if="congesStore.isManagerOrAdmin || congesStore.isSuperAdmin" class="filters-bar">
+    <div class="filter-tabs">
+      <div class="custom-select">
+        <button
+          class="select-button"
+          :class="{ active: filters.pole !== null }"
+          @click="togglePoleDropdown"
+        >
+          {{ filters.pole ? selectedPoleName : 'Tous les pôles' }}
+        </button>
+        <div v-if="showPoleDropdown" class="select-dropdown">
+          <div class="select-option" @click="selectPole(null)">Tous les pôles</div>
+          <div v-for="pole in availablePoles" :key="pole.id" class="select-option" @click="selectPole(pole.id)">
+            {{ pole.nom }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="filter-tabs">
+      <div class="custom-select">
+        <button
+          class="select-button"
+          :class="{ active: filters.equipe !== null, disabled: !filters.pole }"
+          @click="toggleEquipeDropdown"
+          :disabled="!filters.pole"
+        >
+          {{ filters.equipe ? selectedEquipeName : 'Toutes les équipes' }}
+        </button>
+        <div v-if="showEquipeDropdown && filters.pole" class="select-dropdown">
+          <div class="select-option" @click="selectEquipe(null)">Toutes les équipes</div>
+          <div v-for="equipe in availableEquipes" :key="equipe.id" class="select-option" @click="selectEquipe(equipe.id)">
+            {{ equipe.nom }}
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="filter-tabs">
+      <button :class="{ active: statusFilter === 'tous' }" @click="setStatusFilter('tous')">Tous</button>
+      <button :class="{ active: statusFilter === 'approuve' }" @click="setStatusFilter('approuve')">Approuvés</button>
+      <button :class="{ active: statusFilter === 'en_attente' }" @click="setStatusFilter('en_attente')">En attente</button>
+      <button :class="{ active: statusFilter === 'refuse' }" @click="setStatusFilter('refuse')">Refusés</button>
+    </div>
+    
+    <button class="btn-refresh" @click="refreshData" :disabled="loading">
+      <i class="bi" :class="loading ? 'bi-arrow-repeat spin' : 'bi-arrow-clockwise'"></i>
+      {{ loading ? 'Chargement...' : 'Actualiser' }}
+    </button>
+  </div>
+
+  <!-- Filtres simples pour utilisateurs normaux -->
+  <div v-else class="filters-bar">
+    <div class="filter-tabs">
+      <button :class="{ active: statusFilter === 'tous' }" @click="setStatusFilter('tous')">Tous</button>
+      <button :class="{ active: statusFilter === 'approuve' }" @click="setStatusFilter('approuve')">Approuvés</button>
+      <button :class="{ active: statusFilter === 'en_attente' }" @click="setStatusFilter('en_attente')">En attente</button>
+      <button :class="{ active: statusFilter === 'refuse' }" @click="setStatusFilter('refuse')">Refusés</button>
+    </div>
+    
+    <button class="btn-refresh" @click="refreshData" :disabled="loading">
+      <i class="bi" :class="loading ? 'bi-arrow-repeat spin' : 'bi-arrow-clockwise'"></i>
+      {{ loading ? 'Chargement...' : 'Actualiser' }}
+    </button>
+  </div>
+
+  <!-- Modal Détails du Congé -->
+  <div v-if="showDetailModal" class="modal-overlay" @click.self="closeDetailModal">
+    <div class="modal modal-large">
+      <div class="modal-header" :class="{
+        'header-validated': selectedConge?.statut === 'approuve',
+        'header-refused': selectedConge?.statut === 'refuse',
+        'header-partial': isPartiallyValidated
+      }">
+        <h3>
+          Détails du congé
+          <span v-if="isPartiallyValidated" class="header-badge partial">⏳ Partiel</span>
+          <span v-if="selectedConge?.statut === 'approuve'" class="header-badge validated">✓ Validé</span>
+          <span v-if="selectedConge?.statut === 'refuse'" class="header-badge refused">✗ Refusé</span>
+        </h3>
+        <button class="btn-close" @click="closeDetailModal">×</button>
+      </div>
+
+      <div class="modal-body" v-if="selectedConge">
+        <!-- Section utilisateur -->
+        <div class="detail-section">
+          <div class="detail-avatar">{{ getInitials(selectedConge.utilisateur_details?.display_name || '') }}</div>
+          <div class="detail-user-info">
+            <h4>{{ selectedConge.utilisateur_details?.display_name }}</h4>
+            <p class="detail-meta">Matricule: {{ selectedConge.utilisateur_details?.username?.toUpperCase() }}</p>
+            <p class="detail-meta">Email: {{ selectedConge.utilisateur_details?.email || 'Non renseigné' }}</p>
+            <p class="detail-meta">Pseudo: {{ selectedConge.utilisateur_details?.pseudo || 'Non défini' }}</p>
+          </div>
+        </div>
+
+        <!-- Info validation/refus -->
+        <div v-if="selectedConge.statut === 'approuve' && selectedConge.valide_par_details" 
+            class="validation-box validated-box">
+          <h5>✓ Validé par</h5>
+          <p><strong>{{ selectedConge.valide_par_details.display_name }} - {{ (selectedConge.valide_par_details.username).toUpperCase() }}</strong></p>
+          <p class="detail-meta">Le {{ formatDateTime(selectedConge.date_validation) }}</p>
+        </div>
+
+        <div v-if="selectedConge.statut === 'refuse' && selectedConge.refuse_par_details" 
+            class="validation-box refused-box">
+          <h5>✗ Refusé par</h5>
+          <p><strong>{{ selectedConge.refuse_par_details.display_name }} - {{ (selectedConge.refuse_par_details.username).toUpperCase() }} </strong></p>
+          <p class="detail-meta">Le {{ formatDateTime(selectedConge.date_refus) }}</p>
+          <div v-if="selectedConge.commentaire_refus" class="refusal-comment">
+            <label>Motif du refus :</label>
+            <p>{{ selectedConge.commentaire_refus }}</p>
+          </div>
+        </div>
+
+        <!-- Progression pour validation partielle -->
+        <div v-if="isPartiallyValidated" class="progress-section">
+          <div class="progress-header">
+            <span>Progression de la validation</span>
+            <span class="progress-count">{{ selectedConge.jours_valides?.length || 0 }}/{{ totalJoursOuvrables }} jours</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" :style="{ width: progressionPourcentage + '%' }"></div>
+          </div>
+        </div>
+
+        <!-- Détail des jours -->
+        <div v-if="isPartiallyValidated" class="jours-detail">
+          <h4>Détail jour par jour</h4>
+          <div class="jours-grid">
+            <div v-for="jour in joursDetails" :key="jour.date" class="jour-card" :class="jour.valide ? 'valide' : 'en-attente'">
+              <span class="jour-date">{{ formatDateCourt(jour.date) }}</span>
+              <span class="jour-statut">
+                {{ jour.valide ? '✓ Validé' : '⏳ En attente' }}
+              </span>
+              <span class="jour-deduction">-{{ jour.deduction }}j</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-grid">
+          <div class="detail-item">
+            <label>Type de congé</label>
+            <span class="detail-badge" :style="{ backgroundColor: getCongeColor(selectedConge.type_conge) }">
+              {{ selectedConge.type_conge_display }} 
+            </span>
+          </div>
+          
+          <div class="detail-item">
+            <label>Période</label>
+            <span>{{ formatDate(selectedConge.date_debut) }} → {{ formatDate(selectedConge.date_fin) }}</span>
+          </div>
+
+          <div class="detail-item">
+            <label>Jours déduits</label>
+            <span class="detail-deduction">{{ selectedConge.jours_deduits }}j</span>
+          </div>
+
+          <div class="detail-item">
+            <label>Statut</label>
+            <span class="detail-badge" :class="'status-' + selectedConge.statut">
+              {{ selectedConge.statut_display }}
+            </span>
+          </div>
+
+          <div class="detail-item full-width">
+            <label>Date de création</label>
+            <span>{{ formatDateTime(selectedConge.date_creation) }}</span>
+          </div>
+
+          <div class="detail-item full-width" v-if="selectedConge.motif">
+            <label>Motif de la demande</label>
+            <p class="detail-motif">{{ selectedConge.motif }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-secondary" @click="closeDetailModal">Fermer</button>
+        
+        <!-- Boutons pour manager (uniquement si en attente et s'il peut gérer cet utilisateur) -->
+        <template v-if="canManageThisConge(selectedConge) && selectedConge?.statut === 'en_attente'">
+          <button class="btn-danger" @click="openRefuseModal">
+            <i class="bi bi-x-lg"></i> Refuser
+          </button>
+          <button class="btn-success" @click="validateSelectedConge">
+            <i class="bi bi-check-lg"></i> Valider tout
+          </button>
+          <button v-if="isMultiDay(selectedConge)" class="btn-success-outline" @click="openPartialValidation">
+            <i class="bi bi-check-square"></i> Valider partiel
+          </button>
+        </template>
+        
+        <!-- Bouton annuler (pour le propriétaire ou manager) -->
+        <template v-if="canCancelConge(selectedConge)">
+          <button class="btn-warning" @click="cancelSelectedConge">
+            <i class="bi bi-x-circle"></i> Annuler tout
+          </button>
+          <button v-if="selectedConge?.statut === 'approuve' && isMultiDay(selectedConge)" class="btn-warning-outline" @click="openPartialCancel">
+            <i class="bi bi-dash-circle"></i> Annuler partiel
+          </button>
+        </template>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Validation Partielle -->
+  <ValidationPartielleModal
+    v-if="showPartialModal && selectedConge"
+    :conge="selectedConge"
+    :types-conge="typesConge"
+    :solde-disponible="Number(authStore.soldeConge.actuelle)"
+    @close="showPartialModal = false"
+    @valider="handlePartialValidation"
+  />
+
+  <!-- Modal de refus avec commentaire -->
+  <div v-if="showRefuseModal" class="modal-overlay" @click.self="closeRefuseModal">
+    <div class="modal">
+      <div class="modal-header refused-header">
+        <h3>Refuser la demande</h3>
+        <button class="btn-close" @click="closeRefuseModal">×</button>
+      </div>
+      
+      <div class="modal-body">
+        <p>Vous êtes sur le point de refuser la demande de congé de 
+          <strong>{{ selectedConge?.utilisateur_details?.display_name }}</strong>.</p>
+        
+        <div class="form-group">
+          <label>Motif du refus (facultatif)</label>
+          <textarea 
+            v-model="refuseCommentaire" 
+            rows="3" 
+            placeholder="Expliquez pourquoi vous refusez cette demande..."
+            class="form-textarea"
+            maxlength="500"
+          ></textarea>
+          <span class="char-count">{{ refuseCommentaire.length }}/500</span>
+        </div>
+        
+        <p class="warning-text">⚠️ Le solde de l'utilisateur sera recrédité.</p>
+      </div>
+      
+      <div class="modal-actions">
+        <button class="btn-secondary" @click="closeRefuseModal">Annuler</button>
+        <button class="btn-danger" @click="confirmRefuse" :disabled="refusing">
+          <i v-if="refusing" class="bi bi-arrow-repeat spin"></i>
+          <span v-else>Confirmer le refus</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Calendrier -->
+  <Calendar
+    :events="filteredEventsForCalendar"
+    :blocked-dates="blockedDates"
+    :conges="congesStore.conges"
+    :default-view="'month'"
+    class="conges-calendar"
+    @event-click="onEventClick"
+  />
+
+  <!-- Modal Demande de Congé -->
+  <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
+    <div class="modal modal-large">
+      <div class="modal-header">
+        <h3>{{ congesStore.canManageOthers ? 'Ajouter un congé (Manager)' : 'Nouvelle demande de congé' }}</h3>
+        <button class="btn-close" @click="closeModal">×</button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Sélection de l'utilisateur (visible seulement pour managers) -->
+        <div v-if="congesStore.canManageOthers" class="form-group">
+          <label>Utilisateur <span class="required">*</span></label>
+          <div class="user-select-container">
+            <input
+              v-model="userSearchQuery"
+              type="text"
+              class="form-input"
+              placeholder="Rechercher un utilisateur..."
+              @focus="showUserDropdown = true"
+              @input="onUserSearch"
+            />
+            
+            <div v-if="showUserDropdown && filteredUsers.length > 0" class="user-dropdown">
+              <div v-for="user in filteredUsers" :key="user.id" class="user-option" :class="{ selected: selectedUser?.id === user.id }" @click="selectUser(user)">
+                <div class="user-option-info">
+                  <span class="user-option-name">{{ user.display_name }}</span>
+                  <span class="user-option-meta">
+                    {{ user.username.toUpperCase() }} | {{ user.equipe_nom || 'Sans équipe' }} | Solde: {{ user.solde_conge_actuelle }}j
+                  </span>
+                </div>
+              </div>
+            </div>
+            
+            <div v-if="selectedUser && !showUserDropdown" class="selected-user">
+              <div class="avatar-small">{{ getInitials(selectedUser.display_name) }}</div>
+              <div>
+                <p class="user-name">{{ selectedUser.display_name }} ({{ selectedUser.username.toUpperCase() }})</p>
+                <p class="user-solde">Solde disponible: <strong>{{ selectedUser.solde_conge_actuelle }}j</strong></p>
+              </div>
+              <button class="btn-change-user" @click="showUserDropdown = true; userSearchQuery = ''">Changer</button>
+            </div>
+          </div>
+        </div>
+
+        <div v-else-if="authStore.user" class="user-info-form">
+          <div class="avatar-small">{{ userInitials }}</div>
+          <div>
+            <p class="user-name">{{ authStore.user.display_name }} ({{ authStore.user.username.toUpperCase() }})</p>
+            <p class="user-solde">Solde disponible: <strong>{{ authStore.soldeConge.actuelle }}j</strong></p>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Type de congé <span class="required">*</span></label>
+          <div class="type-options">
+            <label v-for="type in typesConge" :key="type.type_conge" class="type-option" :class="{ selected: form.type_conge === type.type_conge }">
+              <input type="radio" v-model="form.type_conge" :value="type.type_conge" />
+              <span class="type-label">{{ typeLabels[type.type_conge] }}</span>
+              <span class="type-time">{{ type.heure_debut }} - {{ type.heure_fin }}</span>
+              <span class="type-deduction">-{{ type.deduction_jours }}j</span>
+            </label>
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label>Date de début <span class="required">*</span></label>
+            <input type="date" v-model="form.date_debut" :min="today" class="form-input" @change="onDateChange" />
+            <p v-if="dateError" class="error-text">{{ dateError }}</p>
+          </div>
+          
+          <div class="form-group">
+            <label>Date de fin <span class="required">*</span></label>
+            <input type="date" v-model="form.date_fin" :min="form.date_debut" :disabled="!form.date_debut" class="form-input" />
+          </div>
+        </div>
+
+        <div v-if="form.date_debut && form.date_fin" class="preview-box">
+          <p>
+            <strong>{{ calculateDays }} jour(s)</strong> demandé(s)
+            <span v-if="deductionPreview > 0">(déduction: <strong>{{ deductionPreview }}j</strong>)</span>
+          </p>
+          <p v-if="isUrgentRequest" class="urgent-text">⚠️ Congé dans moins d'1 semaine - Motif obligatoire !</p>
+        </div>
+
+        <div class="form-group">
+          <label>
+            Motif 
+            <span v-if="isUrgentRequest" class="required">*</span>
+            <span v-else>(facultatif)</span>
+          </label>
+          <textarea v-model="form.motif" rows="3" :placeholder="isUrgentRequest ? 'Motif obligatoire pour un congé urgent...' : 'Raison de votre absence...'" class="form-textarea" maxlength="500"></textarea>
+          <span class="char-count">{{ form.motif?.length || 0 }}/500</span>
+        </div>
+
+        <div v-if="formError" class="alert-error">
+          <i class="bi bi-exclamation-triangle"></i>
+          {{ formError }}
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-secondary" @click="closeModal">Annuler</button>
+        <button class="btn-primary" @click="submitForm" :disabled="!isFormValid || submitting">
+          <i v-if="submitting" class="bi bi-arrow-repeat spin"></i>
+          <span v-else>Envoyer la demande</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useAuthStore } from '@/store/auth'
+import { useCongesStore } from '@/store/conges'
+import Calendar from '@/components/common/Calendar.vue'
+import type { TypeCongeConfig, CalendarEvent, GerableUser } from '@/types/conges'
+import { format, addDays, isWeekend, parseISO, getYear, differenceInDays, startOfDay, eachDayOfInterval } from 'date-fns'
+import { fr } from 'date-fns/locale/fr'
+import { congesApi } from '@/api/conges'
+import { useFiltersStore } from '@/store/filters'
+import ValidationPartielleModal from '@/components/conges/ValidationPartielleModal.vue'
+
+// Stores
+const authStore = useAuthStore()
+const congesStore = useCongesStore()
+const filtersStore = useFiltersStore()
+
+// Clés localStorage
+const STORAGE_KEY_STATUS = 'alimanaka_conges_status_filter'
+
+// État local
+const filters = ref({
+  pole: null as number | null,
+  equipe: null as number | null
+})
+
+const statusFilter = ref<'tous' | 'approuve' | 'en_attente' | 'refuse'>(
+  (localStorage.getItem(STORAGE_KEY_STATUS) as any) || 'tous'
+)
+
+// Modals
+const showModal = ref(false)
+const showDetailModal = ref(false)
+const showRefuseModal = ref(false)
+const showPartialModal = ref(false)
+const partialAction = ref<'valider' | 'annuler'>('valider')
+
+// États
+const loading = ref(false)
+const submitting = ref(false)
+const refusing = ref(false)
+const formError = ref<string | null>(null)
+const dateError = ref<string | null>(null)
+const refuseCommentaire = ref('')
+
+// Données
+const selectedConge = ref<any>(null)
+const selectedUser = ref<GerableUser | null>(null)
+const userSearchQuery = ref('')
+const showUserDropdown = ref(false)
+const typesConge = ref<TypeCongeConfig[]>([])
+
+// Dropdowns pôle/équipe
+const showPoleDropdown = ref(false)
+const showEquipeDropdown = ref(false)
+
+// Formulaire
+const form = ref({
+  type_conge: 'journee' as 'matin' | 'midi' | 'journee',
+  date_debut: '',
+  date_fin: '',
+  motif: ''
+})
+
+// Labels pour les types
+const typeLabels: Record<string, string> = {
+  matin: 'Matin',
+  midi: 'Midi',
+  journee: 'Une journée'
+}
+
+// Computed
+const userInitials = computed(() => {
+  const name = authStore.user?.display_name || authStore.user?.username || '?'
+  return name.charAt(0).toUpperCase()
+})
+
+const getInitials = (name: string) => name.charAt(0).toUpperCase()
+
+const today = computed(() => format(new Date(), 'yyyy-MM-dd'))
+
+const availablePoles = computed(() => filtersStore.poles)
+const availableEquipes = computed(() => filtersStore.equipes)
+
+const selectedPoleName = computed(() => {
+  const pole = availablePoles.value.find(p => p.id === filters.value.pole)
+  return pole ? pole.nom : 'Tous les pôles'
+})
+
+const selectedEquipeName = computed(() => {
+  const equipe = availableEquipes.value.find(e => e.id === filters.value.equipe)
+  return equipe ? equipe.nom : 'Toutes les équipes'
+})
+
+const filteredUsers = computed(() => {
+  if (!userSearchQuery.value) return congesStore.utilisateursGerables
+  const query = userSearchQuery.value.toLowerCase()
+  return congesStore.utilisateursGerables.filter(u => 
+    u.display_name.toLowerCase().includes(query) ||
+    u.username.toLowerCase().includes(query) ||
+    (u.equipe_nom && u.equipe_nom.toLowerCase().includes(query))
+  )
+})
+
+const filteredEventsForCalendar = computed<CalendarEvent[]>(() => {
+  const allEvents = congesStore.eventsForCalendar
+  if (statusFilter.value === 'tous') return allEvents
+  return allEvents.filter(event => {
+    if (event.type !== 'conge') return true
+    return event.statut === statusFilter.value
+  })
+})
+
+const blockedDates = computed(() => {
+  return congesStore.calendrierEvents
+    .filter(e => e.isBlocked && e.type !== 'weekend')
+    .flatMap(e => {
+      const dates: Date[] = []
+      const start = new Date(e.start)
+      const end = e.end ? new Date(e.end) : start
+      let current = new Date(start)
+      while (current <= end) {
+        dates.push(new Date(current))
+        current = addDays(current, 1)
+      }
+      return dates
+    })
+})
+
+const calculateDays = computed(() => {
+  if (!form.value.date_debut || !form.value.date_fin) return 0
+  const start = parseISO(form.value.date_debut)
+  const end = parseISO(form.value.date_fin)
+  let count = 0
+  let current = new Date(start)
+  while (current <= end) {
+    if (!isWeekend(current) && !congesStore.isDateBlocked(current)) count++
+    current = addDays(current, 1)
+  }
+  return count
+})
+
+const deductionPreview = computed(() => {
+  const type = typesConge.value.find(t => t.type_conge === form.value.type_conge)
+  if (!type || !form.value.date_debut || !form.value.date_fin) return 0
+  
+  const start = parseISO(form.value.date_debut)
+  const end = parseISO(form.value.date_fin)
+  let deduction = 0
+  let current = new Date(start)
+  
+  while (current <= end) {
+    if (!isWeekend(current) && !congesStore.isDateBlocked(current)) {
+      const dayOfWeek = current.getDay()
+      if (dayOfWeek === 5 && type.vendredi_deduction) {
+        deduction += type.vendredi_deduction
+      } else if (dayOfWeek === 4 && type.jeudi_deduction) {
+        const vendredi = addDays(current, 1)
+        deduction += congesStore.isDateBlocked(vendredi) ? type.jeudi_deduction : type.deduction_jours
+      } else {
+        deduction += type.deduction_jours
+      }
+    }
+    current = addDays(current, 1)
+  }
+  return deduction
+})
+
+const isUrgentRequest = computed(() => {
+  if (!form.value.date_debut) return false
+  const startDate = startOfDay(parseISO(form.value.date_debut))
+  const now = startOfDay(new Date())
+  return differenceInDays(startDate, now) < 7
+})
+
+const isFormValid = computed(() => {
+  const baseValid = form.value.type_conge && form.value.date_debut && form.value.date_fin && form.value.date_fin >= form.value.date_debut
+  if (congesStore.canManageOthers && !selectedUser.value) return false
+  if (isUrgentRequest.value) return baseValid && form.value.motif?.trim().length > 0
+  return baseValid
+})
+
+// Computed pour la validation partielle
+const isPartiallyValidated = computed(() => {
+  return selectedConge.value?.jours_valides?.length > 0 && selectedConge.value?.statut === 'en_attente'
+})
+
+const totalJoursOuvrables = computed(() => {
+  if (!selectedConge.value) return 0
+  const start = parseISO(selectedConge.value.date_debut)
+  const end = parseISO(selectedConge.value.date_fin)
+  let count = 0
+  let current = new Date(start)
+  while (current <= end) {
+    if (!isWeekend(current) && !congesStore.isDateBlocked(current)) count++
+    current = addDays(current, 1)
+  }
+  return count
+})
+
+const progressionPourcentage = computed(() => {
+  if (!selectedConge.value?.jours_valides) return 0
+  return (selectedConge.value.jours_valides.length / totalJoursOuvrables.value) * 100
+})
+
+const joursDetails = computed(() => {
+  if (!selectedConge.value) return []
+  const start = parseISO(selectedConge.value.date_debut)
+  const end = parseISO(selectedConge.value.date_fin)
+  const joursValides = selectedConge.value.jours_valides || []
+  const type = typesConge.value.find(t => t.type_conge === selectedConge.value.type_conge)
+  
+  return eachDayOfInterval({ start, end })
+    .filter(date => !isWeekend(date) && !congesStore.isDateBlocked(date))
+    .map(date => {
+      const dateStr = format(date, 'yyyy-MM-dd')
+      const valide = joursValides.includes(dateStr)
+      let deduction = type?.deduction_jours || 0
+      if (date.getDay() === 5 && type?.vendredi_deduction) deduction = type.vendredi_deduction
+      return { date: dateStr, valide, deduction }
+    })
+})
+
+// Méthodes de navigation
+const togglePoleDropdown = () => {
+  showPoleDropdown.value = !showPoleDropdown.value
+  showEquipeDropdown.value = false
+}
+
+const toggleEquipeDropdown = () => {
+  if (!filters.value.pole) return
+  showEquipeDropdown.value = !showEquipeDropdown.value
+  showPoleDropdown.value = false
+}
+
+const selectPole = async (id: number | null) => {
+  filters.value.pole = id
+  filters.value.equipe = null
+  showPoleDropdown.value = false
+  if (id) await filtersStore.fetchEquipesByPole(id)
+  else filtersStore.clearEquipes()
+  onFilterChange()
+}
+
+const selectEquipe = (id: number | null) => {
+  filters.value.equipe = id
+  showEquipeDropdown.value = false
+  onFilterChange()
+}
+
+// Méthodes de gestion des congés
+const onEventClick = async (event: CalendarEvent) => {
+  if (event.type !== 'conge') return
+  const congeId = parseInt(String(event.id).replace('conge_', ''))
+  let conge = congesStore.conges.find(c => c.id === congeId)
+  
+  if (!conge && (congesStore.isManagerOrAdmin || congesStore.isSuperAdmin)) {
+    try {
+      conge = await congesApi.getCongeDetails(congeId)
+    } catch (e) {
+      console.error('Erreur chargement détails:', e)
+      return
+    }
+  }
+  
+  if (conge) {
+    selectedConge.value = conge
+    showDetailModal.value = true
+  }
+}
+
+const closeDetailModal = () => {
+  showDetailModal.value = false
+  selectedConge.value = null
+}
+
+const formatDate = (dateStr: string) => format(parseISO(dateStr), 'dd/MM/yyyy', { locale: fr })
+const formatDateCourt = (dateStr: string) => format(parseISO(dateStr), 'EEEE d MMMM', { locale: fr })
+const formatDateTime = (dateStr: string) => format(parseISO(dateStr), 'dd/MM/yyyy HH:mm', { locale: fr })
+
+const getCongeColor = (type: string) => {
+  const colors: Record<string, string> = { matin: '#ff9800', midi: '#4caf50', journee: '#2196f3' }
+  return colors[type] || '#9e9e9e'
+}
+
+const canCancelConge = (conge: any) => conge && (conge.statut === 'en_attente' || conge.statut === 'approuve')
+
+const canManageThisConge = (conge: any): boolean => {
+  if (!conge || !congesStore.isManagerOrAdmin && !congesStore.isSuperAdmin) return false
+  if (congesStore.isSuperAdmin) return true
+  return !!congesStore.utilisateursGerables.find(u => u.id === conge.utilisateur)
+}
+
+const isMultiDay = (conge: any) => {
+  if (!conge) return false
+  return differenceInDays(parseISO(conge.date_fin), parseISO(conge.date_debut)) > 0
+}
+
+// Actions sur les congés
+const cancelSelectedConge = async () => {
+  if (!selectedConge.value || !confirm('Voulez-vous vraiment annuler ce congé ?')) return
+  await congesStore.annulerConge(selectedConge.value.id)
+  closeDetailModal()
+  await refreshData()
+}
+
+const validateSelectedConge = async () => {
+  if (!selectedConge.value || !confirm('Valider cette demande de congé ?')) return
+  try {
+    await congesStore.validerConge(selectedConge.value.id)
+    alert('Congé validé avec succès !')
+    closeDetailModal()
+    await refreshData()
+  } catch (err: any) {
+    alert(err.message || 'Erreur lors de la validation')
+  }
+}
+
+const openRefuseModal = () => {
+  refuseCommentaire.value = ''
+  showRefuseModal.value = true
+}
+
+const closeRefuseModal = () => {
+  showRefuseModal.value = false
+  refuseCommentaire.value = ''
+}
+
+const confirmRefuse = async () => {
+  if (!selectedConge.value) return
+  refusing.value = true
+  try {
+    await congesStore.refuserConge(selectedConge.value.id, refuseCommentaire.value)
+    alert('Congé refusé avec succès.')
+    closeRefuseModal()
+    closeDetailModal()
+    await refreshData()
+  } catch (err: any) {
+    alert(err.message || 'Erreur lors du refus')
+  } finally {
+    refusing.value = false
+  }
+}
+
+const openPartialValidation = () => {
+  partialAction.value = 'valider'
+  showPartialModal.value = true
+}
+
+const openPartialCancel = () => {
+  partialAction.value = 'annuler'
+  showPartialModal.value = true
+}
+
+const handlePartialValidation = async (dates: string[]) => {
+  try {
+    await congesStore.validerCongePartiel(selectedConge.value.id, dates)
+    alert(`${dates.length} jour(s) validé(s) avec succès`)
+    showPartialModal.value = false
+    closeDetailModal()
+    await refreshData()
+  } catch (err: any) {
+    alert(err.message || 'Erreur')
+  }
+}
+
+// Méthodes de filtrage
+const setStatusFilter = (filter: 'tous' | 'approuve' | 'en_attente' | 'refuse') => {
+  statusFilter.value = filter
+  localStorage.setItem(STORAGE_KEY_STATUS, filter)
+  refreshData()
+}
+
+const onFilterChange = () => refreshData()
+
+// Méthodes de recherche utilisateur
+const onUserSearch = () => { showUserDropdown.value = true }
+const selectUser = (user: GerableUser) => {
+  selectedUser.value = user
+  showUserDropdown.value = false
+  userSearchQuery.value = ''
+}
+
+// Méthodes du modal de demande
+const openRequestModal = async () => {
+  formError.value = null
+  dateError.value = null
+  form.value = { type_conge: 'journee', date_debut: '', date_fin: '', motif: '' }
+  selectedUser.value = null
+  userSearchQuery.value = ''
+  
+  try {
+    if (typesConge.value.length === 0) {
+      await congesStore.fetchTypesConge()
+      typesConge.value = congesStore.typesConge
+    }
+    if (congesStore.canManageOthers) await congesStore.fetchUtilisateursGerables()
+    showModal.value = true
+  } catch (error) {
+    console.error('Erreur lors du chargement:', error)
+  }
+}
+
+const closeModal = () => {
+  showModal.value = false
+  selectedUser.value = null
+}
+
+const onDateChange = () => {
+  dateError.value = null
+  if (form.value.date_debut) {
+    const isBlocked = congesStore.calendrierEvents.some(e => {
+      if (!e.isBlocked || e.type === 'weekend') return false
+      return format(new Date(e.start), 'yyyy-MM-dd') === form.value.date_debut
+    })
+    
+    if (isBlocked) {
+      dateError.value = 'Cette date est indisponible (jour férié ou exceptionnel)'
+      form.value.date_debut = ''
+      return
+    }
+    
+    if (!form.value.date_fin || form.value.date_fin < form.value.date_debut) {
+      form.value.date_fin = form.value.date_debut
+    }
+  }
+}
+
+const submitForm = async () => {
+  if (!isFormValid.value) return
+  
+  submitting.value = true
+  formError.value = null
+  
+  try {
+    const payload: any = {
+      type_conge: form.value.type_conge,
+      date_debut: form.value.date_debut,
+      date_fin: form.value.date_fin,
+      motif: form.value.motif
+    }
+    
+    if (congesStore.canManageOthers && selectedUser.value) {
+      payload.user_id = selectedUser.value.id
+    }
+    
+    await congesStore.createConge(payload)
+    closeModal()
+    alert('Demande envoyée !')
+  } catch (err: any) {
+    formError.value = err.response?.data?.error || err.response?.data?.detail || 'Erreur'
+  } finally {
+    submitting.value = false
+  }
+}
+
+const refreshData = async () => {
+  loading.value = true
+  const params: any = { 
+    annee: getYear(new Date()),
+    statut: statusFilter.value === 'tous' ? undefined : statusFilter.value
+  }
+  if (filters.value.pole) params.pole = filters.value.pole
+  if (filters.value.equipe) params.equipe = filters.value.equipe
+  
+  await Promise.all([
+    congesStore.fetchCalendrier(params),
+    congesStore.fetchMesConges(getYear(new Date()))
+  ])
+  loading.value = false
+}
+
+// Exports
+const exportAll = () => congesStore.exportAll()
+const exportMine = () => congesStore.exportMine()
+
+// Visibility change
+const onVisibilityChange = () => {
+  if (document.visibilityState === 'visible') authStore.refreshSolde()
+}
+
+// Lifecycle
+onMounted(async () => {
+  await authStore.checkAuth()
+  await filtersStore.fetchPoles()
+  await refreshData()
+  document.addEventListener('visibilitychange', onVisibilityChange)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('visibilitychange', onVisibilityChange)
+})
+</script>
+
+<style scoped>
+/* Header */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.header-left h1 {
+  color: #2c3e50;
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.solde-badge {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.solde-dispo, .solde-pris {
+  padding: 0.375rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.solde-dispo {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.solde-pris {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.btn-export, .btn-export-all, .btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn-export {
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+.btn-export:hover {
+  background-color: #e5e7eb;
+}
+
+.btn-primary {
+  background: #3498db;
+  color: white;
+  border-color: #3498db;
+}
+
+.btn-primary:hover {
+  background-color: #2563eb;
+}
+
+.btn-primary:disabled {
+  background: #95a5a6;
+  cursor: not-allowed;
+}
+
+.btn-export-all {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.btn-export-all:hover {
+  background-color: #bfdbfe;
+}
+
+/* Filtres */
+.filters-bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.filter-tabs {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.filter-tabs button {
+  padding: 0.6rem 1.2rem;
+  border: 1px solid #dee2e6;
+  background: white;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.filter-tabs button.active {
+  background: #3498db;
+  color: white;
+  border-color: #3498db;
+}
+
+.btn-refresh {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-left: auto;
+}
+
+.btn-refresh:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Calendrier */
+.conges-calendar {
+  height: calc(105vh - 280px);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+/* Modals */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 2rem;
+  animation: fadeIn 0.2s ease;
+}
+
+.modal {
+  background: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow: hidden;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.3s ease;
+}
+
+.modal-large {
+  max-width: 600px;
+}
+
+.modal-header {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid #e9ecef;
+  background: white;
+}
+
+.modal-header.header-validated {
+  background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+  color: white;
+}
+
+.modal-header.header-refused {
+  background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+  color: white;
+}
+
+.modal-header.header-partial {
+  background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+  color: white;
+}
+
+.modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
+}
+
+.modal-header h3 {
+  margin: 0;
+  color: inherit;
+  font-size: 1.3rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.header-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: bold;
+  background: rgba(255,255,255,0.3);
+  border: 1px solid rgba(255,255,255,0.5);
+}
+
+.header-badge.partial {
+  background: rgba(255,255,255,0.3);
+}
+
+.btn-close {
+  background: rgba(255,255,255,0.2);
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: white;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.btn-close:hover {
+  background: rgba(255,255,255,0.3);
+  transform: rotate(90deg);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding: 1.5rem;
+  border-top: 1px solid #e9ecef;
+  background: #f8f9fa;
+  flex-shrink: 0;
+}
+
+/* Section utilisateur */
+.detail-section {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  color: white;
+}
+
+.detail-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: bold;
+  border: 3px solid white;
+}
+
+.detail-user-info h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.3rem;
+}
+
+.detail-meta {
+  margin: 0.25rem 0;
+  opacity: 0.9;
+  font-size: 0.9rem;
+}
+
+/* Validation boxes */
+.validation-box {
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.validated-box {
+  background: #e8f5e9;
+  border-left: 4px solid #4caf50;
+}
+
+.refused-box {
+  background: #ffebee;
+  border-left: 4px solid #f44336;
+}
+
+.validation-box h5 {
+  margin: 0 0 8px 0;
+  font-size: 0.9em;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.refusal-comment {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(0,0,0,0.1);
+}
+
+.refusal-comment label {
+  font-weight: 600;
+  color: #d32f2f;
+  display: block;
+  margin-bottom: 5px;
+}
+
+/* Progress section */
+.progress-section {
+  background: #f8f9fa;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.progress-count {
+  color: #667eea;
+  font-weight: 600;
+}
+
+.progress-bar {
+  height: 8px;
+  background: #e9ecef;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #667eea, #764ba2);
+  transition: width 0.3s ease;
+}
+
+/* Jours detail */
+.jours-detail {
+  margin-bottom: 1.5rem;
+}
+
+.jours-detail h4 {
+  margin: 0 0 1rem 0;
+  color: #2c3e50;
+}
+
+.jours-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.75rem;
+}
+
+.jour-card {
+  padding: 0.75rem;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.jour-card.valide {
+  background: #e8f5e9;
+  border-color: #4caf50;
+}
+
+.jour-card.en-attente {
+  background: #fff3e0;
+  border-color: #ff9800;
+}
+
+.jour-date {
+  font-weight: 600;
+  text-transform: capitalize;
+  font-size: 0.9rem;
+}
+
+.jour-statut {
+  font-size: 0.8rem;
+  color: #6c757d;
+}
+
+.jour-deduction {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #e74c3c;
+  align-self: flex-end;
+}
+
+/* Detail grid */
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.75rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.detail-item.full-width {
+  grid-column: 1 / -1;
+}
+
+.detail-item label {
+  font-size: 0.75rem;
+  color: #6c757d;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.detail-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  color: white;
+  font-weight: 500;
+  font-size: 0.9rem;
+  width: fit-content;
+}
+
+.detail-deduction {
+  color: #e74c3c;
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+.status-en_attente { background: #ff9800; }
+.status-approuve { background: #4caf50; }
+.status-refuse { background: #f44336; }
+.status-annule { background: #9e9e9e; }
+
+.detail-motif {
+  margin: 0;
+  padding: 0.75rem;
+  background: white;
+  border-radius: 6px;
+  border-left: 3px solid #3498db;
+  font-style: italic;
+  color: #495057;
+}
+
+/* Boutons d'action */
+.btn-secondary {
+  padding: 0.75rem 1.5rem;
+  background: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+  background: #5a6268;
+}
+
+.btn-danger {
+  padding: 0.75rem 1.5rem;
+  background: #e74c3c;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+}
+
+.btn-danger:hover {
+  background: #c0392b;
+}
+
+.btn-success {
+  padding: 0.75rem 1.5rem;
+  background: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+}
+
+.btn-success:hover {
+  background: #45a049;
+}
+
+.btn-success-outline {
+  padding: 0.75rem 1.5rem;
+  background: transparent;
+  color: #4caf50;
+  border: 1px solid #4caf50;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+}
+
+.btn-success-outline:hover {
+  background: #4caf50;
+  color: white;
+}
+
+.btn-warning {
+  padding: 0.75rem 1.5rem;
+  background: #ff9800;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+}
+
+.btn-warning:hover {
+  background: #f57c00;
+}
+
+.btn-warning-outline {
+  padding: 0.75rem 1.5rem;
+  background: transparent;
+  color: #ff9800;
+  border: 1px solid #ff9800;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+}
+
+.btn-warning-outline:hover {
+  background: #ff9800;
+  color: white;
+}
+
+/* Custom select */
+.custom-select {
+  position: relative;
+  display: inline-block;
+}
+
+.select-button {
+  padding: 0.6rem 1.2rem;
+  border: 1px solid #dee2e6;
+  background: white;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+  text-align: left;
+  min-width: 150px;
+}
+
+.select-button.active {
+  background: #3498db;
+  color: white;
+  border-color: #3498db;
+}
+
+.select-button.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.select-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: white;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  width: 100%;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.select-option {
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+}
+
+.select-option:hover {
+  background: #f8f9fa;
+}
+
+/* Formulaire */
+.user-info-form, .selected-user {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+}
+
+.avatar-small {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.user-name {
+  font-weight: 600;
+  color: #2c3e50;
+  margin: 0 0 0.25rem 0;
+}
+
+.user-solde {
+  color: #6c757d;
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #495057;
+}
+
+.required {
+  color: #e74c3c;
+}
+
+.form-input, .form-textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.form-input:focus, .form-textarea:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+/* Type options */
+.type-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.type-option {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border: 2px solid #dee2e6;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.type-option:hover {
+  border-color: #3498db;
+  background: #f8f9fa;
+}
+
+.type-option.selected {
+  border-color: #3498db;
+  background: #e3f2fd;
+}
+
+.type-option input {
+  display: none;
+}
+
+.type-label {
+  font-weight: 600;
+  color: #2c3e50;
+  min-width: 100px;
+}
+
+.type-time {
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+.type-deduction {
+  margin-left: auto;
+  background: #e74c3c;
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+/* Preview box */
+.preview-box {
+  background: #e8f5e9;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  border-left: 4px solid #4caf50;
+}
+
+.preview-box p {
+  margin: 0;
+  color: #2e7d32;
+}
+
+.urgent-text {
+  color: #e65100 !important;
+  font-weight: 500;
+  margin-top: 0.5rem !important;
+}
+
+/* Error states */
+.error-text {
+  color: #e74c3c;
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+}
+
+.alert-error {
+  background: #fee;
+  color: #c33;
+  padding: 1rem;
+  border-radius: 6px;
+  border-left: 4px solid #c33;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.warning-text {
+  color: #f44336;
+  font-size: 0.9em;
+  margin-top: 15px;
+}
+
+.char-count {
+  display: block;
+  text-align: right;
+  color: #6c757d;
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+}
+
+/* User dropdown */
+.user-select-container {
+  position: relative;
+}
+
+.user-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #dee2e6;
+  border-radius: 0.375rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 50;
+  margin-top: 0.25rem;
+}
+
+.user-option {
+  padding: 0.75rem;
+  cursor: pointer;
+  border-bottom: 1px solid #f3f4f6;
+  transition: background 0.2s;
+}
+
+.user-option:hover {
+  background: #f9fafb;
+}
+
+.user-option.selected {
+  background: #eff6ff;
+}
+
+.user-option-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-option-name {
+  font-weight: 600;
+  color: #111827;
+}
+
+.user-option-meta {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.btn-change-user {
+  margin-left: auto;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.875rem;
+  color: #3b82f6;
+  background: none;
+  border: 1px solid #3b82f6;
+  border-radius: 0.25rem;
+  cursor: pointer;
+}
+
+.btn-change-user:hover {
+  background: #eff6ff;
+}
+
+/* Animations */
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .header-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  
+  .filter-tabs {
+    order: 3;
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+  }
+  
+  .filter-tabs button {
+    white-space: nowrap;
+  }
+  
+  .modal-actions {
+    flex-direction: column-reverse;
+  }
+  
+  .modal-actions button {
+    width: 100%;
+  }
+  
+  .jours-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>

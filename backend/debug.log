@@ -1,0 +1,416 @@
+Watching for file changes with StatReloader
+"OPTIONS /api/auth/session/ HTTP/1.1" 200 0
+"GET /api/auth/session/ HTTP/1.1" 302 0
+"OPTIONS /api/auth/login/?next=/api/auth/session/ HTTP/1.1" 200 0
+"GET /api/auth/login/?next=/api/auth/session/ HTTP/1.1" 302 0
+"GET /api/auth/session/ HTTP/1.1" 302 0
+"GET /api/auth/login/?next=/api/auth/session/ HTTP/1.1" 302 0
+"GET /api/auth/session/ HTTP/1.1" 302 0
+"GET /api/auth/login/?next=/api/auth/session/ HTTP/1.1" 302 0
+"GET /api/auth/session/ HTTP/1.1" 302 0
+"GET /api/auth/login/?next=/api/auth/session/ HTTP/1.1" 302 0
+"GET /api/auth/session/ HTTP/1.1" 302 0
+"GET /api/auth/login/?next=/api/auth/session/ HTTP/1.1" 302 0
+"GET /api/auth/session/ HTTP/1.1" 302 0
+"GET /api/auth/login/?next=/api/auth/session/ HTTP/1.1" 302 0
+"GET /api/auth/login/ HTTP/1.1" 302 0
+"GET /api/auth/callback/?state=ba6c2d3d-6250-4968-822e-caeaddeb4bf5&session_state=de507aab-389c-b24b-b80d-dd4d04127394&iss=http%3A%2F%2F10.5.100.7%3A8080%2Frealms%2Flalamby-prod&code=a741ad68-db85-7189-a2c3-561cdb759355.de507aab-389c-b24b-b80d-dd4d04127394.95f2c4eb-e790-4848-bd3c-ab617339fe19 HTTP/1.1" 302 0
+"GET /api/auth/session/ HTTP/1.1" 200 213
+Not Found: /api/users/list/
+"GET /api/users/list/ HTTP/1.1" 404 25
+"GET /api/users/profile/ HTTP/1.1" 200 381
+Not Found: /api/users/list/
+"GET /api/users/list/ HTTP/1.1" 404 25
+"GET /api/auth/session/ HTTP/1.1" 200 213
+Not Found: /api/users/list/
+"GET /api/users/list/ HTTP/1.1" 404 25
+"GET /api/auth/session/ HTTP/1.1" 200 213
+Not Found: /api/users/list/
+"GET /api/users/list/ HTTP/1.1" 404 25
+"GET /api/auth/session/ HTTP/1.1" 200 213
+Not Found: /api/users/list/
+"GET /api/users/list/ HTTP/1.1" 404 25
+Not Found: /api/users/list/
+"GET /api/users/list/ HTTP/1.1" 404 25
+"GET /api/auth/session/ HTTP/1.1" 200 213
+Not Found: /api/users/list/
+"GET /api/users/list/ HTTP/1.1" 404 25
+"GET /api/auth/session/ HTTP/1.1" 200 213
+Not Found: /api/users/list/
+"GET /api/users/list/ HTTP/1.1" 404 25
+Not Found: /api/users/list/
+"GET /api/users/list/ HTTP/1.1" 404 25
+"GET /api/auth/session/ HTTP/1.1" 200 213
+Not Found: /api/users/list/
+"GET /api/users/list/ HTTP/1.1" 404 25
+"GET /api/auth/session/ HTTP/1.1" 200 213
+Not Found: /api/users/list/
+"GET /api/users/list/ HTTP/1.1" 404 25
+D:\I-Famadika\Alimanaka\backend\users\views.py changed, reloading.
+Watching for file changes with StatReloader
+Session data corrupted
+"GET /api/auth/session/ HTTP/1.1" 302 0
+"OPTIONS /api/auth/login/?next=/api/auth/session/ HTTP/1.1" 200 0
+Session data corrupted
+"GET /api/auth/login/?next=/api/auth/session/ HTTP/1.1" 302 0
+"GET /api/auth/session/ HTTP/1.1" 302 0
+"GET /api/auth/login/?next=/api/auth/session/ HTTP/1.1" 302 0
+"GET /api/auth/session/ HTTP/1.1" 302 0
+"GET /api/auth/login/?next=/api/auth/session/ HTTP/1.1" 302 0
+"GET /api/auth/login/ HTTP/1.1" 302 0
+"GET /api/auth/callback/?state=b4e4d4f4-19fe-4f69-8ef5-296e91ee9806&session_state=5a8661c4-a808-f135-29c7-b362a2e576e1&iss=http%3A%2F%2F10.5.100.7%3A8080%2Frealms%2Flalamby-prod&code=ca14358d-afc6-8db7-bdc5-bb087aae576f.5a8661c4-a808-f135-29c7-b362a2e576e1.95f2c4eb-e790-4848-bd3c-ab617339fe19 HTTP/1.1" 302 0
+"GET /api/auth/session/ HTTP/1.1" 302 0
+"GET /api/auth/login/?next=/api/auth/session/ HTTP/1.1" 302 0
+"GET /api/auth/session/ HTTP/1.1" 302 0
+"GET /api/auth/login/?next=/api/auth/session/ HTTP/1.1" 302 0
+"GET /api/auth/session/ HTTP/1.1" 302 0
+"GET /api/auth/login/?next=/api/auth/session/ HTTP/1.1" 302 0
+Watching for file changes with StatReloader
+"GET /api/auth/session/ HTTP/1.1" 302 0
+"GET /api/auth/login/?next=/api/auth/session/ HTTP/1.1" 302 0
+"GET /api/auth/session/ HTTP/1.1" 302 0
+"GET /api/auth/login/?next=/api/auth/session/ HTTP/1.1" 302 0
+"GET /api/auth/login/ HTTP/1.1" 302 0
+"GET /api/auth/callback/?state=7e86c1b9-ed66-4072-9e0f-27bd9c1c6c4b&session_state=5a8661c4-a808-f135-29c7-b362a2e576e1&iss=http%3A%2F%2F10.5.100.7%3A8080%2Frealms%2Flalamby-prod&code=ce13e55a-501f-7ae3-6bdb-ee4b200a4152.5a8661c4-a808-f135-29c7-b362a2e576e1.95f2c4eb-e790-4848-bd3c-ab617339fe19 HTTP/1.1" 302 0
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+"GET /api/auth/session/ HTTP/1.1" 302 0
+"GET /api/auth/login/?next=/api/auth/session/ HTTP/1.1" 302 0
+"GET /api/auth/session/ HTTP/1.1" 302 0
+"GET /api/auth/login/?next=/api/auth/session/ HTTP/1.1" 302 0
+"GET /api/auth/session/ HTTP/1.1" 302 0
+"GET /api/auth/login/?next=/api/auth/session/ HTTP/1.1" 302 0
+"GET /api/auth/login/ HTTP/1.1" 302 0
+"GET /api/auth/callback/?state=1889362f-dc86-450e-a87c-b6608db00184&session_state=5a8661c4-a808-f135-29c7-b362a2e576e1&iss=http%3A%2F%2F10.5.100.7%3A8080%2Frealms%2Flalamby-prod&code=66a3aba6-9ad3-0475-e6ee-2ba58c075597.5a8661c4-a808-f135-29c7-b362a2e576e1.95f2c4eb-e790-4848-bd3c-ab617339fe19 HTTP/1.1" 302 0
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Watching for file changes with StatReloader
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+D:\I-Famadika\Alimanaka\backend\authentification\views.py changed, reloading.
+Watching for file changes with StatReloader
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+D:\I-Famadika\Alimanaka\backend\authentification\urls.py changed, reloading.
+Watching for file changes with StatReloader
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Watching for file changes with StatReloader
+Session data corrupted
+"GET /api/auth/session/ HTTP/1.1" 302 0
+Session data corrupted
+Internal Server Error: /api/auth/login/
+Traceback (most recent call last):
+  File "D:\I-Famadika\Alimanaka\backend\venv\lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\I-Famadika\Alimanaka\backend\venv\lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\I-Famadika\Alimanaka\backend\authentification\views.py", line 42, in sso_login_view
+    request.session['state_timestamp'] = import_time_time()  # Pour expiration optionnelle
+TypeError: 'module' object is not callable
+"GET /api/auth/login/?next=/api/auth/session/ HTTP/1.1" 500 19726
+"GET /api/auth/session/ HTTP/1.1" 302 0
+Internal Server Error: /api/auth/login/
+Traceback (most recent call last):
+  File "D:\I-Famadika\Alimanaka\backend\venv\lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\I-Famadika\Alimanaka\backend\venv\lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\I-Famadika\Alimanaka\backend\authentification\views.py", line 42, in sso_login_view
+    request.session['state_timestamp'] = import_time_time()  # Pour expiration optionnelle
+TypeError: 'module' object is not callable
+"GET /api/auth/login/?next=/api/auth/session/ HTTP/1.1" 500 19726
+"GET /api/auth/session/ HTTP/1.1" 302 0
+Internal Server Error: /api/auth/login/
+Traceback (most recent call last):
+  File "D:\I-Famadika\Alimanaka\backend\venv\lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\I-Famadika\Alimanaka\backend\venv\lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\I-Famadika\Alimanaka\backend\authentification\views.py", line 42, in sso_login_view
+    request.session['state_timestamp'] = import_time_time()  # Pour expiration optionnelle
+TypeError: 'module' object is not callable
+"GET /api/auth/login/?next=/api/auth/session/ HTTP/1.1" 500 19726
+"GET /api/auth/session/ HTTP/1.1" 302 0
+Internal Server Error: /api/auth/login/
+Traceback (most recent call last):
+  File "D:\I-Famadika\Alimanaka\backend\venv\lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\I-Famadika\Alimanaka\backend\venv\lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\I-Famadika\Alimanaka\backend\authentification\views.py", line 42, in sso_login_view
+    request.session['state_timestamp'] = import_time_time()  # Pour expiration optionnelle
+TypeError: 'module' object is not callable
+"GET /api/auth/login/?next=/api/auth/session/ HTTP/1.1" 500 19739
+"GET /api/auth/session/ HTTP/1.1" 302 0
+Internal Server Error: /api/auth/login/
+Traceback (most recent call last):
+  File "D:\I-Famadika\Alimanaka\backend\venv\lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\I-Famadika\Alimanaka\backend\venv\lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\I-Famadika\Alimanaka\backend\authentification\views.py", line 42, in sso_login_view
+    request.session['state_timestamp'] = import_time_time()  # Pour expiration optionnelle
+TypeError: 'module' object is not callable
+"GET /api/auth/login/?next=/api/auth/session/ HTTP/1.1" 500 19699
+"GET /api/auth/session/ HTTP/1.1" 302 0
+Internal Server Error: /api/auth/login/
+Traceback (most recent call last):
+  File "D:\I-Famadika\Alimanaka\backend\venv\lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\I-Famadika\Alimanaka\backend\venv\lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\I-Famadika\Alimanaka\backend\authentification\views.py", line 42, in sso_login_view
+    request.session['state_timestamp'] = import_time_time()  # Pour expiration optionnelle
+TypeError: 'module' object is not callable
+"GET /api/auth/login/?next=/api/auth/session/ HTTP/1.1" 500 19699
+Internal Server Error: /api/auth/login/
+Traceback (most recent call last):
+  File "D:\I-Famadika\Alimanaka\backend\venv\lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\I-Famadika\Alimanaka\backend\venv\lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\I-Famadika\Alimanaka\backend\authentification\views.py", line 42, in sso_login_view
+    request.session['state_timestamp'] = import_time_time()  # Pour expiration optionnelle
+TypeError: 'module' object is not callable
+"GET /api/auth/login/ HTTP/1.1" 500 71343
+Not Found: /favicon.ico
+"GET /favicon.ico HTTP/1.1" 404 2849
+Internal Server Error: /api/auth/login/
+Traceback (most recent call last):
+  File "D:\I-Famadika\Alimanaka\backend\venv\lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\I-Famadika\Alimanaka\backend\venv\lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\I-Famadika\Alimanaka\backend\authentification\views.py", line 42, in sso_login_view
+    request.session['state_timestamp'] = import_time_time()  # Pour expiration optionnelle
+TypeError: 'module' object is not callable
+"GET /api/auth/login/ HTTP/1.1" 500 71480
+Internal Server Error: /api/auth/login/
+Traceback (most recent call last):
+  File "D:\I-Famadika\Alimanaka\backend\venv\lib\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "D:\I-Famadika\Alimanaka\backend\venv\lib\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "D:\I-Famadika\Alimanaka\backend\authentification\views.py", line 42, in sso_login_view
+    request.session['state_timestamp'] = import_time_time()  # Pour expiration optionnelle
+TypeError: 'module' object is not callable
+"GET /api/auth/login/ HTTP/1.1" 500 71480
+D:\I-Famadika\Alimanaka\backend\authentification\views.py changed, reloading.
+Watching for file changes with StatReloader
+"GET /api/auth/login/ HTTP/1.1" 302 0
+"GET /api/auth/callback/?state=3bed3680-5348-4f39-a28c-49bf9521c47e&session_state=5a8661c4-a808-f135-29c7-b362a2e576e1&iss=http%3A%2F%2F10.5.100.7%3A8080%2Frealms%2Flalamby-prod&code=a6669b6d-c64e-5f01-6368-6a8f7ff71f6c.5a8661c4-a808-f135-29c7-b362a2e576e1.95f2c4eb-e790-4848-bd3c-ab617339fe19 HTTP/1.1" 302 0
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+"GET /api/auth/login/ HTTP/1.1" 302 0
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+D:\I-Famadika\Alimanaka\backend\alimanaka\urls.py changed, reloading.
+Watching for file changes with StatReloader
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+D:\I-Famadika\Alimanaka\backend\alimanaka\urls.py changed, reloading.
+Watching for file changes with StatReloader
+D:\I-Famadika\Alimanaka\backend\alimanaka\urls.py changed, reloading.
+Watching for file changes with StatReloader
+D:\I-Famadika\Alimanaka\backend\alimanaka\urls.py changed, reloading.
+Watching for file changes with StatReloader
+D:\I-Famadika\Alimanaka\backend\alimanaka\urls.py changed, reloading.
+Watching for file changes with StatReloader
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+"GET /api/auth/session/ HTTP/1.1" 302 0
+"GET /api/auth/login/?next=/api/auth/session/ HTTP/1.1" 302 0
+"GET /api/auth/session/ HTTP/1.1" 302 0
+"GET /api/auth/login/?next=/api/auth/session/ HTTP/1.1" 302 0
+"GET /api/auth/session/ HTTP/1.1" 302 0
+"GET /api/auth/login/?next=/api/auth/session/ HTTP/1.1" 302 0
+"GET /api/auth/login/ HTTP/1.1" 302 0
+"GET /api/auth/session/ HTTP/1.1" 302 0
+"GET /api/auth/login/?next=/api/auth/session/ HTTP/1.1" 302 0
+"GET /api/auth/session/ HTTP/1.1" 302 0
+"GET /api/auth/login/?next=/api/auth/session/ HTTP/1.1" 302 0
+"GET /api/auth/session/ HTTP/1.1" 302 0
+"GET /api/auth/login/?next=/api/auth/session/ HTTP/1.1" 302 0
+"GET /api/auth/session/ HTTP/1.1" 302 0
+"GET /api/auth/login/?next=/api/auth/session/ HTTP/1.1" 302 0
+"GET /api/auth/session/ HTTP/1.1" 302 0
+"GET /api/auth/login/?next=/api/auth/session/ HTTP/1.1" 302 0
+"GET /api/auth/session/ HTTP/1.1" 302 0
+"GET /api/auth/login/?next=/api/auth/session/ HTTP/1.1" 302 0
+"GET /api/auth/session/ HTTP/1.1" 302 0
+"GET /api/auth/login/?next=/api/auth/session/ HTTP/1.1" 302 0
+"GET /api/auth/session/ HTTP/1.1" 302 0
+"GET /api/auth/login/?next=/api/auth/session/ HTTP/1.1" 302 0
+"GET /api/auth/login/ HTTP/1.1" 302 0
+"GET /api/auth/callback/?state=7930ae81-5f33-42dd-a18e-43ce2032cd21&session_state=5a8661c4-a808-f135-29c7-b362a2e576e1&iss=http%3A%2F%2F10.5.100.7%3A8080%2Frealms%2Flalamby-prod&code=909c5748-a93c-4d8a-8cc0-7d95cfe2b480.5a8661c4-a808-f135-29c7-b362a2e576e1.95f2c4eb-e790-4848-bd3c-ab617339fe19 HTTP/1.1" 302 0
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871
+Not Found: /auth/error
+"GET /auth/error?message=State%20invalide HTTP/1.1" 404 2871

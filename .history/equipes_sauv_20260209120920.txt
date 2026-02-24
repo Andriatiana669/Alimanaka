@@ -1,0 +1,113 @@
+<script setup lang="ts">
+import { ref, computed, watch, onMounted } from 'vue'
+import { useDisplayName } from '@/composables/useDisplayName'
+import { useEquipesStore } from '@/store/equipes'
+import type { Equipe, User } from '@/types/user'
+
+const props = defineProps<{
+  equipe: Equipe
+  niveau: number
+  selectedId?: number
+}>()
+
+const emit = defineEmits<{
+  select: [equipe: Equipe]
+  toggle: [equipe: Equipe]
+}>()
+
+const equipesStore = useEquipesStore()
+const expanded = ref(true)
+const showMembres = ref(false)
+const loadingMembres = ref(false)
+const { generatePseudo } = useDisplayName()
+
+// Gestion du localStorage pour persister l'état
+const STORAGE_KEY = 'equipe_membres_state'
+
+const hasChildren = computed(() => 
+  props.equipe.sous_equipes && props.equipe.sous_equipes.length > 0
+)
+
+const isSelected = computed(() => props.selectedId === props.equipe.id)
+
+// Charger l'état depuis le localStorage
+onMounted(() => {
+  const savedState = localStorage.getItem(STORAGE_KEY)
+  if (savedState) {
+    try {
+      const state = JSON.parse(savedState)
+      if (state[props.equipe.id]) {
+        showMembres.value = state[props.equipe.id]
+        if (showMembres.value) {
+          loadMembres()
+        }
+      }
+    } catch (e) {
+      console.error('Erreur de lecture du localStorage:', e)
+    }
+  }
+})
+
+// Sauvegarder l'état dans le localStorage
+const saveState = () => {
+  try {
+    const savedState = localStorage.getItem(STORAGE_KEY)
+    const state = savedState ? JSON.parse(savedState) : {}
+    state[props.equipe.id] = showMembres.value
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+  } catch (e) {
+    console.error('Erreur de sauvegarde du localStorage:', e)
+  }
+}
+
+// Charger les membres depuis l'API via le store
+const loadMembres = async () => {
+  if (loadingMembres.value) return
+  
+  loadingMembres.value = true
+  try {
+    // Utilise l'action fetchMembres de ton store
+    await equipesStore.fetchMembres(props.equipe.id)
+  } catch (error) {
+    console.error('Erreur chargement membres:', error)
+  } finally {
+    loadingMembres.value = false
+  }
+}
+
+// Gestion du double-clic sur l'icône personnes
+const toggleMembres = async () => {
+  showMembres.value = !showMembres.value
+  
+  if (showMembres.value) {
+    await loadMembres()
+  }
+  
+  saveState()
+}
+
+// Gestion du clic simple (optionnel)
+const handleMembreClick = (event: MouseEvent) => {
+  // Empêche le déclenchement du double-clic
+  event.preventDefault()
+}
+
+const toggleExpanded = () => {
+  expanded.value = !expanded.value
+}
+
+// Observer les changements d'équipe
+watch(() => props.equipe.id, () => {
+  // Réinitialiser l'affichage des membres quand l'équipe change
+  showMembres.value = false
+})
+
+// Utilise les membres depuis le store
+const membres = computed(() => {
+  // Vérifie si les membres chargés correspondent à l'équipe actuelle
+  if (equipesStore.currentEquipe?.id === props.equipe.id) {
+    return equipesStore.membresCurrentEquipe
+  }
+  return []
+})
+</script>

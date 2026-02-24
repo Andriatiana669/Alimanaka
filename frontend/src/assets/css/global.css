@@ -1,0 +1,49 @@
+/* src/assets/global.css */
+
+/* Blocage global de la largeur minimale */
+html, body {
+  min-width: 1058px;
+  overflow-x: auto;
+}
+
+#app {
+  min-width: 1058px;
+  width: 100%;
+}
+
+/* Pour les mobiles uniquement, permettre le redimensionnement */
+@media (max-width: 768px) {
+  html, body, #app {
+    min-width: 100vw;
+    min-width: 0;
+    overflow-x: auto;
+  }
+}
+
+/* Message d'avertissement */
+.screen-size-warning {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: #ff9800;
+  color: white;
+  padding: 10px;
+  text-align: center;
+  font-size: 14px;
+  z-index: 9999;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+@media (max-width: 1057px) {
+  .screen-size-warning {
+    display: block;
+  }
+}
+
+@media (max-width: 768px) {
+  .screen-size-warning {
+    display: none; /* Pas d'avertissement sur mobile */
+  }
+}
