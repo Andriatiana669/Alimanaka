@@ -1,0 +1,1 @@
+import{u as e,g as o}from"./main-DcW3TP0o.js";function r(){const t=e();return{user:o(()=>t.user),isAuthenticated:o(()=>t.isAuthenticated),isAdmin:o(()=>t.isAdmin),loading:o(()=>t.loading),error:o(()=>t.error),login:t.login,logout:t.logout,checkAuth:t.checkAuth}}export{r as u};
